@@ -36,6 +36,7 @@ mix
 	.setPublicPath( outputDir )
 	.sourceMaps( false )
 	.sass( `${ assetsDir }/scss/main.scss`, `${ outputDir }/css/main.css` )
+	.sass( `${ assetsDir }/scss/admin.scss`, `${ outputDir }/css/admin.css` )
 	.criticalCss(
 		{
 			enabled: mix.inProduction(),

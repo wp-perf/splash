@@ -1,1 +1,1 @@
-# ToiBox | WordPress Starter Plugin
+# Splash Page by WP Perf

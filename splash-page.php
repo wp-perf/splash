@@ -32,19 +32,21 @@ require_once 'autoloader.php';
 /**
  * Global function providing access to the plugin.
  *
+ * @return Splash_Page
  * @since    1.0.0
+ *
  */
-function wpperf_splash_page() {
+function wpp_splash_page() {
     /**
      * @var $wpperf_splash_page Splash_Page
      */
-    $wpperf_splash_page = Splash_Page::get_instance();
+    $wpp_splash_page = Splash_Page::get_instance();
 
-    return $wpperf_splash_page;
+    return $wpp_splash_page;
 }
 
 // Ready, steady, GO!
-wpperf_splash_page()->initialize(
+wpp_splash_page()->initialize(
     __FILE__,
     WP_PERF_SPLASH_PAGE_VERSION
 );

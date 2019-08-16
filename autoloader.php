@@ -70,7 +70,7 @@ try {
 } catch ( \Exception $e ) {
     wp_die(
         __( 'File not found', '' ),
-        __( 'Forecast by WP Perf', '' ),
+        __( 'Splash Page by WP Perf', '' ),
         $e
     );
 }

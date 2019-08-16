@@ -30,7 +30,7 @@ class Plugin {
      *
      * @var string
      */
-    protected $version;
+    protected $plugin_version;
 
     /**
      * Absolute path to the plugin file
@@ -49,21 +49,22 @@ class Plugin {
     /**
      * Initialize plugin
      *
-     * Called explicitly after the first instantiation to init the plugin.
+     * Needs to be called explicitly after the first instantiation to init the plugin.
      *
      * @param $plugin_file
+     * @param $plugin_version
      *
      * @return Plugin The singleton instance.
      */
-    public function initialize( $plugin_file, $version ) {
+    public function initialize( $plugin_file, $plugin_version ) {
         // Only initialize once.
         if ( isset( $this->plugin_file ) ) {
             return $this;
         }
 
-        $this->version = $version;
-
         $this->plugin_file = $plugin_file;
+
+        $this->plugin_version = $plugin_version;
 
         /**
          * Plugin lifecycle hooks
@@ -88,15 +89,39 @@ class Plugin {
         /**
          * Enqueue assets
          */
-        add_action( 'wp_enqueue_scripts', function () {
-            wp_enqueue_script( 'plugin-name/main', Assets::get_url( 'js/main.js' ), [ 'jquery' ], null, true );
-            wp_enqueue_style( 'plugin-name/main', Assets::get_url( 'css/main.css' ), [], null );
-        } );
+//        add_action( 'wp_enqueue_scripts', function () {
+//            wp_enqueue_script( 'plugin-name/main', Assets::get_url( 'js/main.js' ), [ 'jquery' ], null, true );
+//            wp_enqueue_style( 'plugin-name/main', Assets::get_url( 'css/main.css' ), [], null );
+//        } );
 
         /**
          * Enqueue admin assets
          */
-        add_action( 'admin_enqueue_scripts', function () {
+//        add_action( 'admin_enqueue_scripts', function () {
+//        } );
+
+        add_action( 'template_redirect', function () {
+
+            $protocol = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
+            header( $protocol . ' 503 Service Unavailable', true, 503 );
+            header( 'Status: 503 Service Temporarily Unavailable' );
+            header( 'Retry-After: 3600' );
+
+            $template = file_get_contents( $this->get_plugin_path( 'resources/views/frontend/fallback.php' ) );
+
+            $tags = [
+                '{{language_attributes}}' => get_language_attributes(),
+                '{{charset}}'             => get_bloginfo( 'charset' ),
+                '{{the_title}}'           => __( 'Coming Soon', '' ),
+                '{{the_content}}'         => __( 'Content', '' ),
+            ];
+
+            $html = strtr(
+                $template,
+                $tags
+            );
+            echo $html;
+            exit();
         } );
 
         /**
@@ -111,7 +136,7 @@ class Plugin {
      * @return string semver
      */
     public function get_version() {
-        return $this->version;
+        return $this->plugin_version;
     }
 
     /**
