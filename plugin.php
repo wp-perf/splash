@@ -1,22 +1,22 @@
 <?php
 
 /**
- * Plugin Name:        Splash Page by WP Perf
+ * Plugin Name:        Splash by WP Perf
  * Plugin URI:         https://wp-perf.io
  * Description:        Plugin Description
  * Version:            1.0.0
  * Requires at least:  @TODO WordPress version requirement
  * Requires PHP:       @TODO PHP version requirement
- * Author:             Peter Toi
- * Author URI:         https://petertoi.com
+ * Author:             WP Perf
+ * Author URI:         https://wp-perf.io
  * License:            GPL-2.0+
  * License URI:        http://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:        plugin-name
+ * Text Domain:        splash
  * Domain Path:        /public/lang
  * Network:            @TODO can this be activated network wide?
  */
 
-use WP_Perf\Splash_Page\Plugin as Splash_Page;
+use WP_Perf\Splash\Plugin as Splash;
 
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
@@ -32,21 +32,21 @@ require_once 'autoloader.php';
 /**
  * Global function providing access to the plugin.
  *
- * @return Splash_Page
+ * @return Splash
  * @since    1.0.0
  *
  */
-function wpp_splash_page() {
+function wpp_splash() {
     /**
-     * @var $wpperf_splash_page Splash_Page
+     * @var $wpperf_splash_page Splash
      */
-    $wpp_splash_page = Splash_Page::get_instance();
+    $splash = Splash::get_instance();
 
-    return $wpp_splash_page;
+    return $splash;
 }
 
 // Ready, steady, GO!
-wpp_splash_page()->initialize(
+wpp_splash()->initialize(
     __FILE__,
     WP_PERF_SPLASH_PAGE_VERSION
 );

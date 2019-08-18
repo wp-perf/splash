@@ -6,7 +6,7 @@
  * @author  Peter Toi <peter@petertoi.com>
  */
 
-namespace WP_Perf\Splash_Page;
+namespace WP_Perf\Splash;
 
 /**
  * The core plugin class.
@@ -47,6 +47,13 @@ class Plugin {
     protected $assets;
 
     /**
+     * Plugin settings utility.
+     *
+     * @var Settings
+     */
+    public $settings;
+
+    /**
      * Initialize plugin
      *
      * Needs to be called explicitly after the first instantiation to init the plugin.
@@ -66,6 +73,8 @@ class Plugin {
 
         $this->plugin_version = $plugin_version;
 
+        $this->settings = new Settings();
+
         /**
          * Plugin lifecycle hooks
          */
@@ -80,47 +89,80 @@ class Plugin {
          */
         \add_action( 'plugins_loaded', function () {
             \load_plugin_textdomain(
-                'plugin-name',
+                'splash',
                 false,
-                $this->get_plugin_rel_path( 'languages' )
+                $this->get_plugin_rel_path( 'public/languages' )
             );
         }, 100 );
 
-        /**
-         * Enqueue assets
-         */
-//        add_action( 'wp_enqueue_scripts', function () {
-//            wp_enqueue_script( 'plugin-name/main', Assets::get_url( 'js/main.js' ), [ 'jquery' ], null, true );
-//            wp_enqueue_style( 'plugin-name/main', Assets::get_url( 'css/main.css' ), [], null );
-//        } );
-
-        /**
-         * Enqueue admin assets
-         */
-//        add_action( 'admin_enqueue_scripts', function () {
-//        } );
+        if ( is_admin() ) {
+            new Admin();
+        }
 
         add_action( 'template_redirect', function () {
 
-            $protocol = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
-            header( $protocol . ' 503 Service Unavailable', true, 503 );
-            header( 'Status: 503 Service Temporarily Unavailable' );
-            header( 'Retry-After: 3600' );
+            if ( ! $this->settings->is_enabled() ) {
+                return;
+            }
 
-            $template = file_get_contents( $this->get_plugin_path( 'resources/views/frontend/fallback.php' ) );
+            /**
+             * Redirect sub-pages to home, temporarily via 302 Temporary Redirect
+             * This is in place for both Splash and Maintenance modes
+             */
+            if ( ! is_front_page() ) {
+                wp_safe_redirect( '/', 302 );
+                exit();
+            }
 
+            /**
+             * Set Status 503 Service Unavailable Headers for Maintenance mode.
+             */
+            $mode = $this->settings->get_mode();
+            if ( 'maintenance' === $mode ) {
+                $protocol = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
+                header( $protocol . ' 503 Service Unavailable', true, 503 );
+                header( 'Status: 503 Service Temporarily Unavailable' );
+                header( 'Retry-After: 3600' );
+            }
+
+            /**
+             * Load Template
+             */
+            $template = $this->settings->get_template();
+            if ( 'custom' === $template ) {
+                $custom_path = $this->settings->get_custom_path();
+                if ( ! file_exists( ABSPATH . $custom_path ) ) {
+                    die( 'Custom index file not found.' );
+                }
+                $html_raw     = file_get_contents( ABSPATH . $custom_path );
+                $template_url = home_url( dirname( $custom_path ) );
+
+            } else {
+                $html_raw     = file_get_contents( $this->get_plugin_path( 'resources/views/templates/' . $template . '/index.php' ) );
+                $template_url = $this->get_plugin_url( 'resources/views/templates/' . $template );
+            }
+
+            /**
+             * Search/Replace {{Template Tags}}
+             */
             $tags = [
                 '{{language_attributes}}' => get_language_attributes(),
                 '{{charset}}'             => get_bloginfo( 'charset' ),
-                '{{the_title}}'           => __( 'Coming Soon', '' ),
-                '{{the_content}}'         => __( 'Content', '' ),
+                '{{template_url}}'        => $template_url,
+                '{{title}}'               => wpp_splash()->settings->get_title() ?? '',
+                '{{logo}}'                => wp_get_attachment_image( wpp_splash()->settings->get_logo() ),
             ];
 
             $html = strtr(
-                $template,
+                $html_raw,
                 $tags
             );
+
+            /**
+             * Output
+             */
             echo $html;
+
             exit();
         } );
 
@@ -162,6 +204,17 @@ class Plugin {
     }
 
     /**
+     * Get the absolute url path.
+     *
+     * @param string $file File or path fragment to append to absolute web path.
+     *
+     * @return string
+     */
+    public function get_plugin_url( $file = '' ) {
+        return plugin_dir_url( $this->plugin_file ) . $file;
+    }
+
+    /**
      * Get the plugin slug, effectively the plugin's root folder name.
      *
      * @return string
@@ -171,14 +224,50 @@ class Plugin {
     }
 
     /**
-     * Get the absolute url path.
+     * Get path to an asset in the Public directory
      *
-     * @param string $file File or path fragment to append to absolute web path.
+     * @param $filename
      *
      * @return string
      */
-    public function get_plugin_url( $file = '' ) {
-        return plugin_dir_url( $this->plugin_file ) . $file;
+    public function get_asset_path( $filename ) {
+        $filename    = str_replace( '//', '/', "/$filename" );
+        $public_path = wpp_splash()->get_plugin_path( 'public' );
+
+        if ( empty( $manifest ) ) {
+            $manifest_path = wpp_splash()->get_plugin_path( 'public/mix-manifest.json' );
+            $manifest      = new Manifest( $manifest_path );
+        }
+
+        if ( array_key_exists( $filename, $manifest->get() ) ) {
+            return $public_path . $manifest->get()[ $filename ];
+        } else {
+            return $public_path . $filename;
+        }
+    }
+
+    /**
+     * Get URL to an asset in the Public directory
+     *
+     * @param $filename
+     *
+     * @return string
+     */
+    public function get_asset_url( $filename ) {
+        $filename   = str_replace( '//', '/', "/$filename" );
+        $public_uri = wpp_splash()->get_plugin_url( 'public' );
+        static $manifest;
+
+        if ( empty( $manifest ) ) {
+            $manifest_path = wpp_splash()->get_plugin_path( 'public/mix-manifest.json' );
+            $manifest      = new Manifest( $manifest_path );
+        }
+
+        if ( array_key_exists( $filename, $manifest->get() ) ) {
+            return $public_uri . $manifest->get()[ $filename ];
+        } else {
+            return $public_uri . $filename;
+        }
     }
 
     static function activation() {

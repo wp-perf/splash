@@ -6,7 +6,7 @@
  * @author  Peter Toi <peter@petertoi.com>
  */
 
-namespace WP_Perf\Splash_Page;
+namespace WP_Perf\Splash;
 
 /**
  * An example of a project-specific implementation.

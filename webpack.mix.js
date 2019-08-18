@@ -4,7 +4,6 @@ const SVGSpritemapPlugin = require( 'svg-spritemap-webpack-plugin' );
 const mix = require( 'laravel-mix' );
 require( 'laravel-mix-polyfill' );
 require( 'laravel-mix-versionhash' );
-require( 'laravel-mix-criticalcss' );
 
 /*
  |--------------------------------------------------------------------------
@@ -37,20 +36,8 @@ mix
 	.sourceMaps( false )
 	.sass( `${ assetsDir }/scss/main.scss`, `${ outputDir }/css/main.css` )
 	.sass( `${ assetsDir }/scss/admin.scss`, `${ outputDir }/css/admin.css` )
-	.criticalCss(
-		{
-			enabled: mix.inProduction(),
-			paths: {
-				base: config.devUrl,
-				templates: `./${ outputDir }/css/critical/`,
-			},
-			urls: config.criticalCss.urls,
-			options: {
-				minify: true,
-			},
-		},
-	)
 	.js( `${ assetsDir }/js/main.js`, `${ outputDir }/js/main.js` )
+	.js( `${ assetsDir }/js/admin.js`, `${ outputDir }/js/admin.js` )
 	.polyfill( {
 		enabled: true,
 		useBuiltIns: 'usage',
@@ -59,7 +46,7 @@ mix
 	// .extract()
 	.copy( `${ assetsDir }/fonts/**/*`, `${ outputDir }/fonts` )
 	.copy( `${ assetsDir }/img/**/*`, `${ outputDir }/img` )
-	.copy( `${ assetsDir }/lang/**/*.mo`, `${ outputDir }/lang` )
+	.copy( `${ assetsDir }/languages/**/*.mo`, `${ outputDir }/languages` )
 	.copy( `${ assetsDir }/svg/**/*`, `${ outputDir }/svg` )
 	.copy( `${ assetsDir }/sprites/*`, `${ outputDir }/sprites` )
 	.browserSync( {
