@@ -1,3 +1,53 @@
-.plugin-name {
-  display: block;
+#wp-admin-bar-wpp-splash {
+  background-color: #d54e21;
 }
+
+$wp-admin-bar-wpp-splash-bgcolors: (
+  "fresh": #d54e21,
+  "blue": #e1a948,
+  "coffee": #9ea476,
+  "ectoplasm": #d46f15,
+  "light": #d64e07,
+  "midnight": #69a8bb,
+  "ocean": #aa9d88,
+  "sunrise": #ccaf0b
+);
+
+@each $profile, $bgcolor in $wp-admin-bar-wpp-splash-bgcolors {
+  .admin-color-#{$profile} {
+    #wpadminbar {
+      #wp-admin-bar-wpp-splash {
+        > .ab-item {
+          background-color: $bgcolor;
+
+          &:hover {
+            background-color: darken($bgcolor, 10) !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+//$wp-admin-bar-wpp-splash-color: (
+//  fresh: #d54e21,
+//  blue: #e1a948,
+//  coffee: #9ea476,
+//  ectoplasm: #d46f15,
+//  light: #d64e07,
+//  midnight: #69a8bb,
+//  ocean: #aa9d88,
+//  sunrise: #ccaf0b
+//);
+
+//@each $profile, $bgcolor in $profiles {
+//  .admin-color-#{$profile} {
+//    #wp-admin-bar-wpp-splash {
+//      background-color: $bgcolor;
+//
+//      &:hover {
+//        background-color: darken($bgcolor, 10);
+//      }
+//    }
+//  }
+//}

@@ -95,13 +95,21 @@ class Plugin {
             );
         }, 100 );
 
-        if ( is_admin() ) {
-            new Admin();
-        }
+        new Admin();
 
         add_action( 'template_redirect', function () {
 
-            if ( ! $this->settings->is_enabled() ) {
+            /**
+             * Bail if neither mode is enabled.
+             */
+            if ( ! $this->is_enabled() ) {
+                return;
+            }
+
+            /**
+             * Bail if we're logged in with `manage_options` capabilities
+             */
+            if ( current_user_can( 'manage_options' ) ) {
                 return;
             }
 
@@ -145,17 +153,15 @@ class Plugin {
             /**
              * Search/Replace {{Template Tags}}
              */
-            $tags = [
-                '{{language_attributes}}' => get_language_attributes(),
-                '{{charset}}'             => get_bloginfo( 'charset' ),
-                '{{template_url}}'        => $template_url,
-                '{{title}}'               => wpp_splash()->settings->get_title() ?? '',
-                '{{logo}}'                => wp_get_attachment_image( wpp_splash()->settings->get_logo() ),
-            ];
-
             $html = strtr(
                 $html_raw,
-                $tags
+                [
+                    '{{language_attributes}}' => get_language_attributes(),
+                    '{{charset}}'             => get_bloginfo( 'charset' ),
+                    '{{template_url}}'        => $template_url,
+                    '{{title}}'               => wpp_splash()->settings->get_title() ?? '',
+                    '{{logo}}'                => wp_get_attachment_image( wpp_splash()->settings->get_logo() ),
+                ]
             );
 
             /**
@@ -280,5 +286,14 @@ class Plugin {
 
     static function uninstall() {
         return true;
+    }
+
+    /**
+     * Is Enabled?
+     *
+     * @return bool
+     */
+    public function is_enabled() {
+        return (bool) $this->settings->get_enabled();
     }
 }

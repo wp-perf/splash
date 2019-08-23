@@ -218,13 +218,4 @@ class Settings {
         return $this;
     }
 
-    /**
-     * Is Enabled?
-     *
-     * @return bool
-     */
-    public function is_enabled() {
-        return (bool) $this->get_enabled();
-    }
-
 }
