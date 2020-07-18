@@ -36,7 +36,7 @@
     "laravel-mix-polyfill": "^1.1.0",
     "laravel-mix-svg-sprite": "^1.0.0",
     "laravel-mix-versionhash": "^1.0.7",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "node-wp-i18n": "^1.2.3",
     "postcss-custom-properties": "^9.0.2",
     "purify-css": "^1.2.5",
